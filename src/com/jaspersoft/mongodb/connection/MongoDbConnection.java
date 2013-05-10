@@ -30,6 +30,8 @@ import java.sql.SQLXML;
 import java.sql.Savepoint;
 import java.sql.Statement;
 import java.sql.Struct;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executor;
@@ -62,8 +64,14 @@ public class MongoDbConnection implements Connection {
 
 	private DB mongoDatabase;
 
-	private final Logger logger = LoggerFactory.getLogger(MongoDbConnection.class);
+	private static final Logger logger = LoggerFactory.getLogger(MongoDbConnection.class);
 
+	protected static final List<Integer> AUTH_ERROR_CODES = Arrays.asList(new Integer[] {
+			16550, // not authorized for query on foo.system.namespaces
+			10057, // unauthorized db:admin ns:admin.system.users lock type:1 client:127.0.0.1
+			15845 // unauthorized
+	});
+	
 	public MongoDbConnection(String mongoURI, String username, String password)
 			throws JRException {
 		create(this.mongoURI = mongoURI);
@@ -97,7 +105,7 @@ public class MongoDbConnection implements Connection {
 		} catch (Exception e) {
 			String message = e.getMessage();
 			if (e instanceof MongoException) {
-				if (message != null && message.startsWith("unauthorized db")) {
+				if (AUTH_ERROR_CODES.contains(((MongoException) e).getCode())) {
 					performaAuthentication = true;
 				} else {
 					logger.error("Cannot set database", e);
