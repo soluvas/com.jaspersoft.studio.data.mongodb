@@ -28,7 +28,8 @@ import net.sf.jasperreports.engine.JRValueParameter;
 import net.sf.jasperreports.engine.JasperReportsContext;
 import net.sf.jasperreports.engine.query.JRAbstractQueryExecuter;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.jaspersoft.mongodb.MongoDbDataSource;
 import com.jaspersoft.mongodb.connection.MongoDbConnection;
@@ -41,16 +42,16 @@ import com.jaspersoft.mongodb.connection.MongoDbConnection;
  * 
  */
 public class MongoDbQueryExecuter extends JRAbstractQueryExecuter {
-	private final static Logger logger = Logger
+	private final static Logger logger = LoggerFactory
 			.getLogger(MongoDbQueryExecuter.class);
 
-	private Map<String, ? extends JRValueParameter> reportParameters;
+	private final Map<String, ? extends JRValueParameter> reportParameters;
 
-	private Map<String, Object> parameters;
+	private final Map<String, Object> parameters;
 
 	private MongoDbQueryWrapper wrapper;
 
-	private boolean directParameters;
+	private final boolean directParameters;
 
 	public MongoDbQueryExecuter(JasperReportsContext jasperReportsContext,
 			JRDataset dataset,
@@ -96,6 +97,7 @@ public class MongoDbQueryExecuter extends JRAbstractQueryExecuter {
 	 * Creates a new {@link MongoDbDataSource} from the report parameters and
 	 * the query string
 	 */
+	@Override
 	public JRDataSource createDatasource() throws JRException {
 		MongoDbConnection connection = (MongoDbConnection) ((Map<?, ?>) getParameterValue(JRParameter.REPORT_PARAMETERS_MAP))
 				.get(JRParameter.REPORT_CONNECTION);

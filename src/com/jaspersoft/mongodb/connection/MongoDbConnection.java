@@ -36,7 +36,8 @@ import java.util.concurrent.Executor;
 
 import net.sf.jasperreports.engine.JRException;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.mongodb.DB;
 import com.mongodb.Mongo;
@@ -55,13 +56,13 @@ public class MongoDbConnection implements Connection {
 
 	private String mongoURI;
 
-	private String username;
+	private final String username;
 
-	private String password;
+	private final String password;
 
 	private DB mongoDatabase;
 
-	private final Logger logger = Logger.getLogger(MongoDbConnection.class);
+	private final Logger logger = LoggerFactory.getLogger(MongoDbConnection.class);
 
 	public MongoDbConnection(String mongoURI, String username, String password)
 			throws JRException {
@@ -76,7 +77,7 @@ public class MongoDbConnection implements Connection {
 		try {
 			client = new Mongo(mongoURIObject = new MongoURI(mongoURI));
 		} catch (Exception e) {
-			logger.error(e);
+			logger.error("Cannot create connection", e);
 			throw new JRException(e.getMessage());
 		}
 	}
@@ -99,11 +100,11 @@ public class MongoDbConnection implements Connection {
 				if (message != null && message.startsWith("unauthorized db")) {
 					performaAuthentication = true;
 				} else {
-					logger.error(e);
+					logger.error("Cannot set database", e);
 					throw new JRException(message);
 				}
 			} else {
-				logger.error(e);
+				logger.error("Cannot set database", e);
 				throw new JRException(message);
 			}
 		}
@@ -175,7 +176,7 @@ public class MongoDbConnection implements Connection {
 			return "Connection test successful.\n" + "Mongo database name: "
 					+ mongoDatabase.getName();
 		} catch (Exception e) {
-			logger.error(e);
+			logger.error("Cannot test connection", e);
 			throw new JRException(e);
 		}
 	}
@@ -422,27 +423,32 @@ public class MongoDbConnection implements Connection {
 		return null;
 	}
 
+	@Override
 	public void setSchema(String schema) throws SQLException {
 		// TODO Auto-generated method stub
 
 	}
 
+	@Override
 	public String getSchema() throws SQLException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
+	@Override
 	public void abort(Executor executor) throws SQLException {
 		// TODO Auto-generated method stub
 
 	}
 
+	@Override
 	public void setNetworkTimeout(Executor executor, int milliseconds)
 			throws SQLException {
 		// TODO Auto-generated method stub
 
 	}
 
+	@Override
 	public int getNetworkTimeout() throws SQLException {
 		// TODO Auto-generated method stub
 		return 0;

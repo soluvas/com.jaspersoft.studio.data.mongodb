@@ -31,7 +31,8 @@ import net.sf.jasperreports.engine.JRValueParameter;
 import net.sf.jasperreports.engine.JasperReportsContext;
 import net.sf.jasperreports.engine.design.JRDesignField;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.jaspersoft.mongodb.connection.MongoDbConnection;
 import com.jaspersoft.mongodb.query.MongoDbParameter;
@@ -51,7 +52,7 @@ public class MongoDbFieldsProvider {
 
     private static final Lock lock = new ReentrantLock();
 
-    private static final Logger logger = Logger.getLogger(MongoDbFieldsProvider.class);
+    private static final Logger logger = LoggerFactory.getLogger(MongoDbFieldsProvider.class);
 
     public static final String FIELD_NAME_SEPARATOR = ".";
 

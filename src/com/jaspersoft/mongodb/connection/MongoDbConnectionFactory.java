@@ -18,7 +18,8 @@ package com.jaspersoft.mongodb.connection;
 import net.sf.jasperreports.engine.JRException;
 
 import org.apache.commons.pool.PoolableObjectFactory;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 
@@ -26,7 +27,7 @@ import org.apache.log4j.Logger;
  * 
  */
 public class MongoDbConnectionFactory implements PoolableObjectFactory<MongoDbConnection> {
-  private final Logger logger = Logger.getLogger(MongoDbConnectionFactory.class);
+  private final Logger logger = LoggerFactory.getLogger(MongoDbConnectionFactory.class);
 
   private String mongoURI;
 
@@ -68,7 +69,7 @@ public class MongoDbConnectionFactory implements PoolableObjectFactory<MongoDbCo
             && (username == null ? true : username.equals(connection.getUsername()))
             && (password == null ? true : password.equals(connection.getPassword())) && (connection.test() != null);
       } catch (JRException e) {
-        logger.error(e);
+        logger.error("Cannot validate connection", e);
       }
     }
     return false;

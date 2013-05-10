@@ -17,7 +17,8 @@ package com.jaspersoft.mongodb.connection;
 
 import org.apache.commons.pool.impl.GenericObjectPool;
 import org.apache.commons.pool.impl.GenericObjectPool.Config;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 
@@ -27,11 +28,11 @@ import org.apache.log4j.Logger;
 public class MongoDbConnectionManager {
     private GenericObjectPool<MongoDbConnection> connectionsPool;
 
-    private Config poolConfiguration;
+    private final Config poolConfiguration;
 
-    private MongoDbConnectionFactory connectionFactory;
+    private final MongoDbConnectionFactory connectionFactory;
 
-    private final Logger logger = Logger.getLogger(MongoDbConnectionManager.class);
+    private final Logger logger = LoggerFactory.getLogger(MongoDbConnectionManager.class);
 
     public MongoDbConnectionManager() {
         connectionFactory = new MongoDbConnectionFactory();
@@ -76,7 +77,7 @@ public class MongoDbConnectionManager {
                 logger.debug("Current active connections on return: " + connectionsPool.getNumActive());
             }
         } catch (Exception e) {
-            logger.error(e);
+            logger.error("Cannot return connection", e);
         }
     }
 
@@ -86,7 +87,7 @@ public class MongoDbConnectionManager {
                 connectionsPool.clear();
                 connectionsPool.close();
             } catch (Exception e) {
-                logger.error(e);
+                logger.error("Cannot shutdown", e);
             }
         }
     }

@@ -22,7 +22,8 @@ import net.sf.jasperreports.engine.JRDataSource;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JRField;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.jaspersoft.mongodb.query.MongoDbQueryWrapper;
 import com.mongodb.DBObject;
@@ -34,13 +35,13 @@ import com.mongodb.DBObject;
  * 
  */
 public class MongoDbDataSource implements JRDataSource {
-    private MongoDbQueryWrapper wrapper;
+    private final MongoDbQueryWrapper wrapper;
 
     private DBObject currentDbObject;
 
     public static final String QUERY_LANGUAGE = "MongoDbQuery";
 
-    private static final Logger logger = Logger.getLogger(MongoDbDataSource.class);
+    private static final Logger logger = LoggerFactory.getLogger(MongoDbDataSource.class);
 
     private boolean hasIterator = false;
 
@@ -77,7 +78,7 @@ public class MongoDbDataSource implements JRDataSource {
             }
             return null;
         } catch (Exception e) {
-            logger.error(e);
+            logger.error("Cannot gt field value", e);
             throw new JRException(e.getMessage());
         }
     }

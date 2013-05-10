@@ -21,8 +21,8 @@ import net.sf.jasperreports.data.AbstractDataAdapterService;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JRParameter;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.jaspersoft.mongodb.connection.MongoDbConnection;
 
@@ -32,11 +32,11 @@ import com.jaspersoft.mongodb.connection.MongoDbConnection;
  * @author Eric Diaz
  */
 public class MongoDbDataAdapterService extends AbstractDataAdapterService {
-    private static final Log log = LogFactory.getLog(MongoDbDataAdapterService.class);
+    private static final Logger log = LoggerFactory.getLogger(MongoDbDataAdapterService.class);
 
     private MongoDbConnection connection;
 
-    private MongoDbDataAdapter dataAdapter;
+    private final MongoDbDataAdapter dataAdapter;
 
     public MongoDbDataAdapterService(MongoDbDataAdapter dataAdapter) {
         this.dataAdapter = dataAdapter;

@@ -23,7 +23,8 @@ import java.util.regex.Pattern;
 
 import net.sf.jasperreports.engine.JRException;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.jaspersoft.mongodb.connection.MongoDbConnection;
 import com.mongodb.BasicDBObject;
@@ -42,7 +43,7 @@ import com.mongodb.util.JSON;
  * 
  */
 public class MongoDbQueryWrapper {
-    private final static Logger logger = Logger.getLogger(MongoDbQueryWrapper.class);
+    private final static Logger logger = LoggerFactory.getLogger(MongoDbQueryWrapper.class);
 
     public static final String FIND_QUERY_KEY = "findQuery";
 
@@ -80,9 +81,9 @@ public class MongoDbQueryWrapper {
 
     public int rowsToProcess = 5;
 
-    private MongoDbConnection connection;
+    private final MongoDbConnection connection;
 
-    private Map<String, Object> parameters;
+    private final Map<String, Object> parameters;
 
     public List<?> commandResults;
 
@@ -286,7 +287,7 @@ public class MongoDbQueryWrapper {
                 return Integer.parseInt((String) value);
             }
         } catch (Exception e) {
-            logger.error(e);
+            logger.error("Cannot process integer", e);
         }
         return null;
     }
