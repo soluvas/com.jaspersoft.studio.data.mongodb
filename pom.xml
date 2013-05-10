@@ -13,7 +13,7 @@
 	<artifactId>com.jaspersoft.studio.data.mongodb</artifactId>
 	<!--packaging>eclipse-plugin</packaging-->
 	<packaging>jar</packaging>
-	<version>5.1.1-SNAPSHOT</version>
+	<version>5.1.0.soluvas1</version>
 	
 	<dependencies>
 		<dependency>
