@@ -35,7 +35,7 @@ import com.jaspersoft.mongodb.MongoDbDataSource;
 import com.jaspersoft.mongodb.connection.MongoDbConnection;
 
 /**
- * A query executer for pseudo mongodb queries<br/>
+ * A query executer for pseudo mongodb queries<br>
  * This implementation process report parameters
  * 
  * @author Eric Diaz

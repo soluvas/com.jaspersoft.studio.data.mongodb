@@ -26,7 +26,7 @@ import net.sf.jasperreports.engine.query.JRQueryExecuter;
 import net.sf.jasperreports.engine.query.QueryExecuterFactory;
 
 /**
- * Query executer factory for MongoDB pseudo queries. <br/>
+ * Query executer factory for MongoDB pseudo queries. <br>
  * This factory creates a {@link MongoDbQueryExecuter}
  * 
  * @author Eric Diaz
@@ -34,11 +34,12 @@ import net.sf.jasperreports.engine.query.QueryExecuterFactory;
  */
 public class MongoDbQueryExecuterFactory implements QueryExecuterFactory {
 	/**
-	 * Creates a {@link MongoDbQueryExecuter}.<br/>
-	 * <br/>
+	 * Creates a {@link MongoDbQueryExecuter}.<br>
+	 * <br>
 	 * This method is called at fill time for reports/datasets having a query
 	 * supported by this factory (MongoDbQuery).
 	 */
+	@Override
 	public JRQueryExecuter createQueryExecuter(JRDataset dataset,
 			Map<String, ? extends JRValueParameter> parameters)
 			throws JRException {
@@ -49,10 +50,12 @@ public class MongoDbQueryExecuterFactory implements QueryExecuterFactory {
 	/**
 	 * Method not implemented
 	 */
+	@Override
 	public Object[] getBuiltinParameters() {
 		return null;
 	}
 
+	@Override
 	public boolean supportsQueryParameterType(String queryParameterType) {
 		return true;
 	}
