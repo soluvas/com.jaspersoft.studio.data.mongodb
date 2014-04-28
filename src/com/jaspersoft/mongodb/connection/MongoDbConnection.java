@@ -31,9 +31,10 @@ import java.sql.Savepoint;
 import java.sql.Statement;
 import java.sql.Struct;
 import java.util.Arrays;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.Executor;
 
 import net.sf.jasperreports.engine.JRException;
@@ -66,11 +67,12 @@ public class MongoDbConnection implements Connection {
 
 	private static final Logger logger = LoggerFactory.getLogger(MongoDbConnection.class);
 
-	protected static final List<Integer> AUTH_ERROR_CODES = Arrays.asList(new Integer[] {
+	protected static final Set<Integer> AUTH_ERROR_CODES = new HashSet<Integer>(Arrays.asList(new Integer[] {
 			16550, // not authorized for query on foo.system.namespaces
 			10057, // unauthorized db:admin ns:admin.system.users lock type:1 client:127.0.0.1
-			15845 // unauthorized
-	});
+			15845, // unauthorized
+			13    // MongoDB 2.6.0: not authorized on DB to execute command { count: \"system.namespaces\", query: {}, fields: {} }
+	}));
 	
 	public MongoDbConnection(String mongoURI, String username, String password)
 			throws JRException {
@@ -86,7 +88,7 @@ public class MongoDbConnection implements Connection {
 			client = new Mongo(mongoURIObject = new MongoURI(mongoURI));
 		} catch (Exception e) {
 			logger.error("Cannot create connection", e);
-			throw new JRException(e.getMessage());
+			throw new JRException(e.getMessage(), e);
 		}
 	}
 
@@ -105,15 +107,16 @@ public class MongoDbConnection implements Connection {
 		} catch (Exception e) {
 			String message = e.getMessage();
 			if (e instanceof MongoException) {
-				if (AUTH_ERROR_CODES.contains(((MongoException) e).getCode())) {
+				final MongoException mongoE = (MongoException) e;
+				if (AUTH_ERROR_CODES.contains(mongoE.getCode())) {
 					performaAuthentication = true;
 				} else {
-					logger.error("Cannot set database", e);
-					throw new JRException(message);
+					logger.error("Cannot set database. Code " + mongoE.getCode() + ": " + mongoE, mongoE);
+					throw new JRException("Error " + mongoE.getCode() + ": " + mongoE, mongoE);
 				}
 			} else {
-				logger.error("Cannot set database", e);
-				throw new JRException(message);
+				logger.error("Cannot set database: " + e, e);
+				throw new JRException(message, e);
 			}
 		}
 		if (performaAuthentication) {
