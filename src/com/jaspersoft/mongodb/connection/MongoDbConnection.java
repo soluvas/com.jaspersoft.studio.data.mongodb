@@ -57,7 +57,7 @@ import com.mongodb.MongoClientURI;
 public class MongoDbConnection implements Connection {
 	private MongoClient client;
 
-	private String mongoURI;
+	private final String mongoURI;
 	private final String username;
 	private final String password;
 	private String mongoDatabaseName;
@@ -81,9 +81,10 @@ public class MongoDbConnection implements Connection {
 	 */
 	public MongoDbConnection(String mongoURI, String username, String password)
 			throws JRException {
-		create(this.mongoURI = mongoURI);
+		this.mongoURI = mongoURI;
 		this.username = username;
 		this.password = password;
+		create(mongoURI);
 		setDatabase();
 	}
 
@@ -93,7 +94,7 @@ public class MongoDbConnection implements Connection {
 		final MongoClientURI origMongoUri = new MongoClientURI(mongoURI);
 		String uriWithoutDbStr = "mongodb://";
 		final String theUsername = this.username != null ? this.username : origMongoUri.getUsername();
-		if (username != null || origMongoUri.getUsername() != null) {
+		if (theUsername != null) {
 			// MongoDB passwords are never empty
 			final String thePassword = this.password != null ? this.password : String.valueOf(origMongoUri.getPassword());
 			try {
@@ -108,7 +109,7 @@ public class MongoDbConnection implements Connection {
 			if (i > 0) {
 				uriWithoutDbStr += ","; 
 			}
-			uriWithoutDbStr += origMongoUri.getHosts();
+			uriWithoutDbStr += origMongoUri.getHosts().get(i);
 		}
 		uriWithoutDbStr += "/";
 		
