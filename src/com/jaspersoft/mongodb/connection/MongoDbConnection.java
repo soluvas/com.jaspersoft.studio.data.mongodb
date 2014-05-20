@@ -15,6 +15,8 @@
  ******************************************************************************/
 package com.jaspersoft.mongodb.connection;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.sql.Array;
 import java.sql.Blob;
 import java.sql.CallableStatement;
@@ -44,8 +46,8 @@ import org.slf4j.LoggerFactory;
 
 import com.mongodb.DB;
 import com.mongodb.Mongo;
-import com.mongodb.MongoException;
-import com.mongodb.MongoURI;
+import com.mongodb.MongoClient;
+import com.mongodb.MongoClientURI;
 
 /**
  * 
@@ -53,15 +55,12 @@ import com.mongodb.MongoURI;
  * 
  */
 public class MongoDbConnection implements Connection {
-	private Mongo client;
-
-	private MongoURI mongoURIObject;
+	private MongoClient client;
 
 	private String mongoURI;
-
 	private final String username;
-
 	private final String password;
+	private String mongoDatabaseName;
 
 	private DB mongoDatabase;
 
@@ -71,9 +70,15 @@ public class MongoDbConnection implements Connection {
 			16550, // not authorized for query on foo.system.namespaces
 			10057, // unauthorized db:admin ns:admin.system.users lock type:1 client:127.0.0.1
 			15845, // unauthorized
-			13    // MongoDB 2.6.0: not authorized on DB to execute command { count: \"system.namespaces\", query: {}, fields: {} }
+			13     // MongoDB 2.6.0: not authorized on DB to execute command { count: \"system.namespaces\", query: {}, fields: {} }
 	}));
 	
+	/**
+	 * @param mongoURI URI (can include username and password for the connection).
+	 * @param username If not {@code null}, will override the username in mongoURI.
+	 * @param password If not {@code null}, will override the password in mongoURI.
+	 * @throws JRException
+	 */
 	public MongoDbConnection(String mongoURI, String username, String password)
 			throws JRException {
 		create(this.mongoURI = mongoURI);
@@ -84,11 +89,37 @@ public class MongoDbConnection implements Connection {
 
 	private void create(String mongoURI) throws JRException {
 		close();
+		
+		final MongoClientURI origMongoUri = new MongoClientURI(mongoURI);
+		String uriWithoutDbStr = "mongodb://";
+		final String theUsername = this.username != null ? this.username : origMongoUri.getUsername();
+		if (username != null || origMongoUri.getUsername() != null) {
+			// MongoDB passwords are never empty
+			final String thePassword = this.password != null ? this.password : String.valueOf(origMongoUri.getPassword());
+			try {
+				uriWithoutDbStr += URLEncoder.encode(theUsername, "UTF-8") +
+						":" + URLEncoder.encode(thePassword, "UTF-8"); 
+				uriWithoutDbStr += "@";
+			} catch (UnsupportedEncodingException e) {
+				throw new JRException("Invalid Mongo URI: " + e, e);
+			}
+		}
+		for (int i = 0; i < origMongoUri.getHosts().size(); i++) {
+			if (i > 0) {
+				uriWithoutDbStr += ","; 
+			}
+			uriWithoutDbStr += origMongoUri.getHosts();
+		}
+		uriWithoutDbStr += "/";
+		
 		try {
-			client = new Mongo(mongoURIObject = new MongoURI(mongoURI));
+			logger.debug("Connecting to {} as {} to query database '{}'",
+					origMongoUri.getHosts(), theUsername, origMongoUri.getDatabase()); 
+			client = new MongoClient(new MongoClientURI(uriWithoutDbStr));
+			mongoDatabaseName = origMongoUri.getDatabase();
 		} catch (Exception e) {
 			logger.error("Cannot create connection", e);
-			throw new JRException(e.getMessage(), e);
+			throw new JRException("Cannot create connection: " + e, e);
 		}
 	}
 
@@ -100,37 +131,7 @@ public class MongoDbConnection implements Connection {
 		if (mongoDatabase != null) {
 			return;
 		}
-		mongoDatabase = client.getDB(mongoURIObject.getDatabase());
-		boolean performaAuthentication = false;
-		try {
-			mongoDatabase.getCollectionNames();
-		} catch (Exception e) {
-			String message = e.getMessage();
-			if (e instanceof MongoException) {
-				final MongoException mongoE = (MongoException) e;
-				if (AUTH_ERROR_CODES.contains(mongoE.getCode())) {
-					performaAuthentication = true;
-				} else {
-					logger.error("Cannot set database. Code " + mongoE.getCode() + ": " + mongoE, mongoE);
-					throw new JRException("Error " + mongoE.getCode() + ": " + mongoE, mongoE);
-				}
-			} else {
-				logger.error("Cannot set database: " + e, e);
-				throw new JRException(message, e);
-			}
-		}
-		if (performaAuthentication) {
-			if (username != null && password != null) {
-				if (!mongoDatabase.authenticate(username,
-						password.toCharArray())) {
-					throw new JRException(
-							"Successful connection but wrong authentication");
-				}
-			} else {
-				throw new JRException(
-						"Authentication required but username or password is empty");
-			}
-		}
+		mongoDatabase = client.getDB(mongoDatabaseName);
 	}
 
 	public DB getMongoDatabase() {
@@ -151,11 +152,11 @@ public class MongoDbConnection implements Connection {
 
 	@Override
 	public void close() {
+		mongoDatabaseName = null;
 		if (client != null) {
 			client.close();
 			client = null;
 		}
-		mongoURIObject = null;
 	}
 
 	@Override
@@ -166,17 +167,13 @@ public class MongoDbConnection implements Connection {
 		return true;
 	}
 
-	public MongoURI getMongoURIObject() {
-		return mongoURIObject;
-	}
-
 	public Mongo getClient() {
 		return client;
 	}
 
 	public String test() throws JRException {
-		if (mongoURIObject == null) {
-			throw new JRException("Invalid mongo URL");
+		if (mongoDatabaseName == null) {
+			throw new JRException("Invalid Mongo URI");
 		}
 
 		if (mongoDatabase == null) {
@@ -188,12 +185,8 @@ public class MongoDbConnection implements Connection {
 					+ mongoDatabase.getName();
 		} catch (Exception e) {
 			logger.error("Cannot test connection", e);
-			throw new JRException(e);
+			throw new JRException("Cannot test connection: " + e, e);
 		}
-	}
-
-	public void getDatabase(String databaseName) {
-
 	}
 
 	@Override
